@@ -59,8 +59,9 @@ const (
 	ArgLogFormat = "log.format"
 	ArgLogPretty = "log.pretty"
 
-	SrvHttpAddr = "srv.http-addr"
-	SrvGrpcAddr = "srv.grpc-addr"
+	SrvHttpAddr    = "srv.http-addr"
+	SrvGrpcAddr    = "srv.grpc-addr"
+	SrvSwaggerOpen = "srv.swagger-open"
 )
 
 func init() {
@@ -103,7 +104,9 @@ func (app *App) postRun(cfg *Config) error {
 
 	// 1. 加载配置
 	viperLoader := viper.NewLoader(".", "config", "toml")
-	viperLoader.SetDefault("srv.http", ":8080")
+	viperLoader.SetDefault(SrvHttpAddr, ":8080")
+	viperLoader.SetDefault(SrvGrpcAddr, ":8081")
+	viperLoader.SetDefault(SrvSwaggerOpen, false)
 	if err = config.AddSource(ConfigSourceFile, viperLoader); err != nil {
 		//panic(errors.Errorf("加载配置错误:%s", err))
 		return errors.Errorf("加载配置错误:%s", err)
@@ -128,10 +131,16 @@ func (app *App) postRun(cfg *Config) error {
 
 	//4. http/grpc
 	if vv := config.Get(ConfigSourceFile, SrvHttpAddr); vv != nil && reflect.TypeOf(vv).Kind() == reflect.String {
-		app.setHttpServer(vv.(string), cfg.Router)
+		var swaggerOpen bool
+		if so := config.Get(ConfigSourceFile, SrvSwaggerOpen); so != nil && reflect.TypeOf(so).Kind() == reflect.Bool {
+			swaggerOpen = so.(bool)
+		}
+		app.setHttpServer(vv.(string), cfg.Router, swaggerOpen)
 	}
-	if vv := config.Get(ConfigSourceFile, SrvGrpcAddr); vv != nil && reflect.TypeOf(vv).Kind() == reflect.String && cfg.GrpcRegister != nil {
-		app.setGrpcServer(vv.(string), cfg.GrpcRegister)
+	if cfg.GrpcRegister != nil {
+		if vv := config.Get(ConfigSourceFile, SrvGrpcAddr); vv != nil && reflect.TypeOf(vv).Kind() == reflect.String {
+			app.setGrpcServer(vv.(string), cfg.GrpcRegister)
+		}
 	}
 
 	return nil
@@ -213,10 +222,11 @@ func (app *App) setRedis(viperLoader *viper.Loader) {
 	}
 }
 
-func (app *App) setHttpServer(addr string, router func(router gin.IRouter)) {
+func (app *App) setHttpServer(addr string, router func(router gin.IRouter), swaggerOpen bool) {
 	app.http = http_svc.NewServer(&http_svc.Config{
-		Addr:   addr,
-		Router: router,
+		Addr:        addr,
+		Router:      router,
+		SwaggerOpen: swaggerOpen,
 	})
 }
 

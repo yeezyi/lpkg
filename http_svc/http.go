@@ -2,12 +2,15 @@ package http_svc
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/yeezyi/gin-swagger"
 	"net/http"
 )
 
 type Config struct {
-	Addr   string
-	Router func(router gin.IRouter)
+	Addr        string
+	Router      func(router gin.IRouter)
+	SwaggerOpen bool
 }
 
 func NewServer(config *Config) *http.Server {
@@ -16,6 +19,7 @@ func NewServer(config *Config) *http.Server {
 	engine.Use(gin.Recovery())
 	engine.Use(cors())
 
+	swaggerRouter(config.SwaggerOpen, engine)
 	config.Router(engine)
 	var addr = ":8080"
 	if len(config.Addr) != 0 {
@@ -46,5 +50,16 @@ func cors() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusNoContent)
 		}
 		ctx.Next()
+	}
+}
+
+func swaggerRouter(open bool, r gin.IRouter) {
+	router := r.Group("/swagger")
+	{
+		if open {
+			router.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DocExpansion("none"), ginSwagger.DefaultModelsExpandDepth(10)))
+		} else {
+			router.GET("/*any", ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "ems.swagger_web_close"))
+		}
 	}
 }
