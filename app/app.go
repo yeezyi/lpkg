@@ -74,7 +74,7 @@ func GetInstance() *App {
 	return app
 }
 
-func Init(cfg *Config) *App {
+func Init(cfg *Config) {
 	app = new(App)
 	cmd := &cobra.Command{
 		Use:           cfg.Name,
@@ -96,8 +96,6 @@ func Init(cfg *Config) *App {
 	cmd.Flags().Bool(ArgLogCaller, false, "是否显示调用方法：true/false")
 	cmd.Flags().String(ArgLogFormat, "text", "日志格式：text/json")
 	cmd.Flags().Bool(ArgLogPretty, false, "json格式日志打印美化：true/false")
-
-	return app
 }
 func (app *App) postRun(cfg *Config) error {
 	var err error
