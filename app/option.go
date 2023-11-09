@@ -35,4 +35,6 @@ type Config struct {
 	Router func(router gin.IRouter)
 
 	GrpcRegister func(*grpc.Server)
+
+	Init func()
 }

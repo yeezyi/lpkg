@@ -141,6 +141,10 @@ func (app *App) postRun(cfg *Config) error {
 		}
 	}
 
+	if cfg.Init != nil {
+		cfg.Init()
+	}
+
 	return nil
 }
 
