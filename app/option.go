@@ -36,5 +36,5 @@ type Config struct {
 
 	GrpcRegister func(*grpc.Server)
 
-	Init func()
+	Init func() error
 }

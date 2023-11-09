@@ -142,7 +142,9 @@ func (app *App) postRun(cfg *Config) error {
 	}
 
 	if cfg.Init != nil {
-		cfg.Init()
+		if err = cfg.Init(); err != nil {
+			return errors.Errorf("运行初始化函数错误:%s", err)
+		}
 	}
 
 	return nil
