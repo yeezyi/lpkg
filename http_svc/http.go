@@ -59,7 +59,10 @@ func swaggerRouter(open bool, r gin.IRouter) {
 		if open {
 			router.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DocExpansion("none"), ginSwagger.DefaultModelsExpandDepth(10)))
 		} else {
-			router.GET("/*any", ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "ems.swagger_web_close"))
+			//router.GET("/*any", ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "ems.swagger_web_close"))
+			router.GET("/*any", func(c *gin.Context) {
+				c.String(http.StatusNotFound, "")
+			})
 		}
 	}
 }
